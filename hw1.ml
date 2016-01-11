@@ -67,10 +67,35 @@ let rec set_difference a b =
 if debug then Printf.printf "[1;2] difference [1;2;3;4]? : "; print_int_list (set_difference a b);;
 if debug then Printf.printf "[1;2;3;4] difference [1;2]? : "; print_int_list (set_difference b a);;
 
-let rec fixed_point eq f x num_calls =
-	if eq (f x) x then num_calls + 1 else fixed_point eq f (f x) (num_calls + 1)
+let rec computed_fixed_point eq f x =
+	if eq (f x) x 
+	then x 
+	else computed_fixed_point eq f (f x)
 ;;
 
-let rec computed_fixed_point eq f x =
-	fixed_point eq f x 0
+if debug then Printf.printf "computed_fixed_point x^2 starting at 0 : %d\n" (computed_fixed_point (=) (fun x -> x * 2) (0));;
+if debug then Printf.printf "computed_fixed_point x / 2 starting at 10 : %d\n" (computed_fixed_point (=) (fun x -> x / 2) (10));;
+if debug then Printf.printf "computed_fixed_point sqrt(x) starting at 10. : %f\n" (computed_fixed_point (=) (sqrt) (10.));;
+if debug then Printf.printf "computed_fixed_point x * 2 starting at 1. : %f\n" (computed_fixed_point (=) (fun x -> x *. 2.) (1.));;
+
+let rec run_period f p x = 
+	if p = 0 then x else run_period f (p - 1) (f x)
 ;;
+
+let rec computed_periodic_point eq f p x =
+	let period_x = run_period f p x in
+	if eq period_x x then x else computed_periodic_point eq f p (f x)
+;;
+
+if debug then Printf.printf "computed_periodic_point x/2 period 0 starting at -1 : %d\n" (computed_periodic_point (=) (fun x -> x /2) (0) (-1));;
+if debug then Printf.printf "computed_periodic_point x^2 - 1 period 2 starting at 0.5 : %f\n" (computed_periodic_point (=) (fun x -> x *. x -. 1.) (2) (0.5));;
+
+
+
+
+
+
+
+
+
+
