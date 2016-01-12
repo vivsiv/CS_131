@@ -102,19 +102,16 @@ let rules = [Lvalue, [N Binop]; Binop, [N Expr]; Expr, [T "("; N Expr; T ")"]; E
 let rules2 = [Binop, [T "+"]; Expr, [T "5"]];;
 let rules3 = [Lvalue, [N Lvalue]; Binop, [N Expr]; Expr, [T "("; N Expr; T ")"]; Expr, [T "5"]; Incrop, [T "++"]];;
 
-let symbol_terminates symbol terminal_symbols = 
-	match symbol with 
-		| N non_terminal -> contains terminal_symbols non_terminal
- 		| T terminal -> true
-;;
-
 let rec right_side_terminates rh_side terminal_symbols = 
 	match rh_side with
 		| [] -> true
-		| symbol::rh_side_tail -> 
-			if symbol_terminates symbol terminal_symbols 
-			then right_side_terminates rh_side_tail terminal_symbols
-			else false
+		| symbol::rh_side_tail ->
+			match symbol with 
+				| N non_terminal -> 
+					if contains terminal_symbols non_terminal
+					then right_side_terminates rh_side_tail terminal_symbols
+					else false
+				| T terminal -> right_side_terminates rh_side_tail terminal_symbols
 ;;
 
 let rec add_terminating_symbols (all_rules, scanned_rules, base_terminal_symbols) =
