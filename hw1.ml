@@ -103,22 +103,21 @@ let rules2 = [Binop, [T "+"]; Expr, [T "5"]];;
 
 let symbol_terminates sym term_symbols = 
 	match sym with 
-		| N s -> subset [s] term_symbols
- 		| T s -> true
+		| N n -> subset [n] term_symbols
+ 		| T t -> true
 ;;
 
 let rec right_side_terminates rh_side term_symbols = 
 	match rh_side with
 		| [] -> true
-		| h::t -> if (symbol_terminates h term_symbols) then right_side_terminates t term_symbols else false
+		| h::t -> if symbol_terminates h term_symbols then right_side_terminates t term_symbols else false
 ;;
-
 
 let rec find_terminating_symbols term_symbols rules =
 	match rules with
 		| [] -> term_symbols
 		| (sym,l)::t -> 
-			if (right_side_terminates l term_symbols) 
+			if right_side_terminates l term_symbols 
 			then 
 				if subset [sym] term_symbols
 				then find_terminating_symbols term_symbols t
@@ -130,8 +129,8 @@ let rec find_terminating_symbols term_symbols rules =
 if debug then Printf.printf "find_terminating_symbols rules: %B\n" ((find_terminating_symbols [] rules) = [Incrop;Expr]);;
 if debug then Printf.printf "find_terminating_symbols rules2: %B\n" ((find_terminating_symbols [] rules2) = [Expr;Binop]);;
 
-let rec rule_terminates r term_symbols =
-	match r with
+let rec rule_terminates rules term_symbols =
+	match rules with
 		| (sym,l) -> right_side_terminates l term_symbols
 
 ;;
