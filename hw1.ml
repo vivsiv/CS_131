@@ -102,23 +102,23 @@ let rules = [Lvalue, [N Binop]; Binop, [N Expr]; Expr, [T "("; N Expr; T ")"]; E
 let rules2 = [Binop, [T "+"]; Expr, [T "5"]];;
 let rules3 = [Lvalue, [N Lvalue]; Binop, [N Expr]; Expr, [T "("; N Expr; T ")"]; Expr, [T "5"]; Incrop, [T "++"]];;
 
-let rec right_side_terminates rh_side terminal_symbols = 
+let rec rh_side_terminates rh_side terminal_symbols = 
 	match rh_side with
 		| [] -> true
 		| symbol::rh_side_tail ->
 			match symbol with 
 				| N non_terminal -> 
 					if contains terminal_symbols non_terminal
-					then right_side_terminates rh_side_tail terminal_symbols
+					then rh_side_terminates rh_side_tail terminal_symbols
 					else false
-				| T terminal -> right_side_terminates rh_side_tail terminal_symbols
+				| T terminal -> rh_side_terminates rh_side_tail terminal_symbols
 ;;
 
 let rec add_terminating_symbols (all_rules, scanned_rules, base_terminal_symbols) =
 	match scanned_rules with
 		| [] -> (all_rules, all_rules, base_terminal_symbols)
 		| (nt_symbol,rh_side)::scanned_rules_tail -> 
-			if right_side_terminates rh_side base_terminal_symbols 
+			if rh_side_terminates rh_side base_terminal_symbols 
 			then 
 				if subset [nt_symbol] base_terminal_symbols
 				then add_terminating_symbols (all_rules, scanned_rules_tail, base_terminal_symbols)
@@ -163,7 +163,7 @@ let rec filter_rules rules terminal_symbols =
 	match rules with
 		| [] -> []
 		| (nt_symbol,rh_side)::rules_tail -> 
-			if right_side_terminates rh_side terminal_symbols
+			if rh_side_terminates rh_side terminal_symbols
 			then (nt_symbol,rh_side)::(filter_rules rules_tail terminal_symbols)
 			else filter_rules rules_tail terminal_symbols
 ;;	
