@@ -166,7 +166,7 @@ let rec filter_rules rules terminal_symbols =
 	match rules with
 		| [] -> []
 		| (nt_symbol,rh_side)::rules_tail -> 
-			if contains terminal_symbols nt_symbol
+			if right_side_terminates rh_side terminal_symbols
 			then (nt_symbol,rh_side)::(filter_rules rules_tail terminal_symbols)
 			else filter_rules rules_tail terminal_symbols
 ;;	
