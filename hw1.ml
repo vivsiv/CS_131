@@ -90,7 +90,75 @@ let rec computed_periodic_point eq f p x =
 if debug then Printf.printf "computed_periodic_point x/2 period 0 starting at -1 : %d\n" (computed_periodic_point (=) (fun x -> x /2) (0) (-1));;
 if debug then Printf.printf "computed_periodic_point x^2 - 1 period 2 starting at 0.5 : %f\n" (computed_periodic_point (=) (fun x -> x *. x -. 1.) (2) (0.5));;
 
+type ('nonterminal, 'terminal) symbol =
+  | N of 'nonterminal
+  | T of 'terminal
+;;
 
+type nonterms = | Expr | Binop | Lvalue | Incrop;;
+
+let rule = Expr, [T "("; N Expr; T ")"];;
+let rules = [Lvalue, [N Binop]; Binop, [N Expr]; Expr, [T "("; N Expr; T ")"]; Expr, [T "5"]; Incrop, [T "++"]];;
+let rules2 = [Binop, [T "+"]; Expr, [T "5"]];;
+
+let symbol_terminates sym term_symbols = 
+	match sym with 
+		| N s -> subset [s] term_symbols
+ 		| T s -> true
+;;
+
+let rec right_side_terminates rh_side term_symbols = 
+	match rh_side with
+		| [] -> true
+		| h::t -> if (symbol_terminates h term_symbols) then right_side_terminates t term_symbols else false
+;;
+
+
+let rec find_terminating_symbols term_symbols rules =
+	match rules with
+		| [] -> term_symbols
+		| (sym,l)::t -> 
+			if (right_side_terminates l term_symbols) 
+			then 
+				if subset [sym] term_symbols
+				then find_terminating_symbols term_symbols t
+				else find_terminating_symbols (sym::term_symbols) t
+			else
+				find_terminating_symbols term_symbols t
+;;
+
+if debug then Printf.printf "find_terminating_symbols rules: %B\n" ((find_terminating_symbols [] rules) = [Incrop;Expr]);;
+if debug then Printf.printf "find_terminating_symbols rules2: %B\n" ((find_terminating_symbols [] rules2) = [Expr;Binop]);;
+
+let rec rule_terminates r term_symbols =
+	match r with
+		| (sym,l) -> right_side_terminates l term_symbols
+
+;;
+
+let rec filter_rules rules term_symbols = 
+	match rules with
+		| [] -> []
+		| r::t -> 
+			if rule_terminates r term_symbols
+			then r::(filter_rules t term_symbols)
+			else filter_rules t term_symbols
+;;	
+
+let filter_blind_alleys g =
+	match g with
+		| (start_sym,rules) -> (start_sym, filter_rules rules (find_terminating_symbols [] rules))
+;;
+
+let test_grammar = Expr, rules;;
+(* let test_filtered_grammar = Expr, rules;; *)
+let test_filtered_grammar = Expr, [Binop, [N Expr]; Expr, [T "("; N Expr; T ")"]; Expr, [T "5"]; Incrop, [T "++"]];;
+
+if debug then Printf.printf "filter_blind_alleys rules: %B\n" ((filter_blind_alleys test_grammar) = test_filtered_grammar);;
+
+let test_grammar_2 = Expr, rules2;;
+let test_filtered_grammar_2 = Expr, rules2;;
+if debug then Printf.printf "filter_blind_alleys rules2: %B\n" ((filter_blind_alleys test_grammar_2) = test_filtered_grammar_2);;
 
 
 
