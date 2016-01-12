@@ -131,10 +131,6 @@ let terminal_symbol_list (all_rules, scanned_rules, terminal_symbols) =
 	terminal_symbols
 ;;
 
-let equal_symbol_lists s1 s2 = 
-	equal_sets (terminal_symbol_list s1) (terminal_symbol_list s2)
-;;
-
 if debug then Printf.printf "add_terminating_symbols rules: %B\n" (terminal_symbol_list(add_terminating_symbols(rules,rules,[])) = [Incrop;Expr]);;
 if debug then Printf.printf "add_terminating_symbols rules2: %B\n" (terminal_symbol_list(add_terminating_symbols(rules2,rules2,[])) = [Expr;Binop]);;
 if debug then Printf.printf "add_terminating_symbols rules3: %B\n" (terminal_symbol_list(add_terminating_symbols(rules3,rules3,[])) = [Incrop;Expr]);;
@@ -150,6 +146,10 @@ if debug then Printf.printf "add_terminating_symbols 2x rules2: %B\n" (terminal_
 if debug then Printf.printf "add_terminating_symbols 1x rules3: %B\n" (terminal_symbol_list(add_terminating_symbols(rules3,rules3,[])) = [Incrop;Expr]);;
 if debug then Printf.printf "add_terminating_symbols 2x rules3: %B\n" (terminal_symbol_list(add_terminating_symbols(add_terminating_symbols(rules3,rules3,[]))) = [Binop;Incrop;Expr]);;
 if debug then Printf.printf "add_terminating_symbols 3x rules3: %B\n" (terminal_symbol_list(add_terminating_symbols(add_terminating_symbols(add_terminating_symbols(rules3,rules3,[])))) = [Binop;Incrop;Expr]);;
+
+let equal_symbol_lists s1 s2 = 
+	equal_sets (terminal_symbol_list s1) (terminal_symbol_list s2)
+;;
 
 let find_all_terminating_symbols rules =  
 	terminal_symbol_list(computed_fixed_point (equal_symbol_lists) add_terminating_symbols (rules,rules,[]))
