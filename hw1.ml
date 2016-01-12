@@ -120,7 +120,7 @@ let rec add_terminating_symbols (all_rules, scanned_rules, base_terminal_symbols
 		| (nt_symbol,rh_side)::scanned_rules_tail -> 
 			if rh_side_terminates rh_side base_terminal_symbols 
 			then 
-				if subset [nt_symbol] base_terminal_symbols
+				if contains base_terminal_symbols nt_symbol
 				then add_terminating_symbols (all_rules, scanned_rules_tail, base_terminal_symbols)
 				else add_terminating_symbols (all_rules, scanned_rules_tail, (nt_symbol::base_terminal_symbols))
 			else
