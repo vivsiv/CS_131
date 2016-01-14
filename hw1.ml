@@ -1,4 +1,4 @@
-let debug = true;;
+let debug = false;;
 
 let rec print_int_list l = 
 	match l with 
@@ -61,11 +61,11 @@ let rec difference a intersect base =
 		| [] -> base
 		| h::t -> if contains intersect h then difference t intersect base else difference t intersect (h::base)
 ;;
-let rec set_difference a b = 
+let rec set_diff a b = 
 	difference a (set_intersection a b) []
 ;;
-if debug then Printf.printf "[1;2] difference [1;2;3;4]? : "; print_int_list (set_difference a b);;
-if debug then Printf.printf "[1;2;3;4] difference [1;2]? : "; print_int_list (set_difference b a);;
+if debug then Printf.printf "[1;2] difference [1;2;3;4]? : "; print_int_list (set_diff a b);;
+if debug then Printf.printf "[1;2;3;4] difference [1;2]? : "; print_int_list (set_diff b a);;
 
 let rec computed_fixed_point eq f x =
 	if eq (f x) x 
