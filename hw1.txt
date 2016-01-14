@@ -1,0 +1,75 @@
+While working on the set operations, my general approach was to implement one
+function, test it, then leverage it in the implementation of other set 
+operations. To implement subset I use a contains helper to check if an item 
+exists in a list. In subset I check if every element in set a is contained in 
+set b. I then utilize subset to implement equal sets by its set theory definition: 
+set a is a subset of b and set b is a subset of a. I reuse the contains function
+for both set union and intersection. In union I add elements of set a not in b to
+set b, and in intersection I add elements of a in b to a base empty list.
+Finally for set difference I take the intersection of sets a and b and add
+all elements of a not in the intersection to a base empty list. A lot of these
+implementations use helper functions with similar signatures which is a litle 
+repetitive. Alternatively, I could match on both sets in the same call and 
+add elements on to the front of subesequent recursive calls. The first approach 
+was the most intuitive to me so I stuck with it.
+
+My implementations of the computed_fixed_point and computed_periodic_point
+are very similar to their definitions in the problem statement. One 
+uncertainty I had with computed fixed point was what to do when no fixed
+point existed. At first I thought I should keep track of the number of function
+calls and break when num_calls = INT_MAX to avoid an infinite loop. 
+I was pleasantly surprised to find out that ocaml returns infinity in the infinite 
+loop case. 
+
+I use one helper for the computed_periodic_point implementation that performs 
+n composed calls of f x, with n being the period. I was initially confused 
+what start value to use in the next call to computed_periodic_point if period_x 
+did not equal the original x. However once I understood that computed fixed points
+were simply periodic points with a period of 1, I realized the next call had to start 
+with f x.
+
+My approach to filter_blind_alleys was to start with the smallest detail and build 
+to the final solution, starting with identifying terminal symbols. In my first 
+implementation I matched on a single symbol and returned true/false if it was 
+terminal/non-terminal. From here I realized that a terminal rule is just a right 
+hand side with all terminal symbols, and a terminal right hand side is just a list 
+of terminal symbols. I expanded my matching to check if and entire right hand side
+is terminal. Now with a function that checks for terminal right hand sides, I can 
+go over an entire list of rules and get the set of all terminal symbols. 
+
+At this point I ran into a road block. I realized that running over the list of 
+rules once could leave out some terminals because the order in which symbols are 
+checked is totally random. For instance a rule that seems non terminal could become 
+terminal in future checks. Instead of just calling the rules scan once I needed to 
+re-run it multiple times using the result of the scan before it. This concept of 
+re-running a function eventually reminded me of the, the computed_fixed_point 
+function. If I could make a function that generates a list of terminal 
+symbols and uses its own return value for input I could leverage 
+computed_fixed_point to compose function calls until the list generation function 
+returns its input.
+
+Making the function composable was the most difficult part of this assignment as
+scanning over a list rules means abandoning part of the list during each call. I 
+eventually settled on a function that takes 3 element tuple: the set of rules, 
+the rules to check, and the list of terminating symbols. An adjustment I had to 
+add was restarting the rules to check value to the full set of rules before a new call.
+
+With this composable function and computed_fixed_point I can find all the terminal 
+symbols in a grammar. Now only one step remained: filtering out rules that do not 
+terminate. To accomplish this I leverage leveraged my function that checks for terminal 
+right hand sides and just pass it the full list of terminal symbols. 
+Iterating through the list of rules using this approach yields the rules that are not
+blind alleys, and combining them with the original start symbol yields the final grammar.
+
+One issue I have with my final solution is the add_terminal_symbols function, particulary
+its 3 value tuple input and output. Ideally this function should just return a list of
+symbols, but that would make it tough to use with computed_fixed_point. I'm not
+sure what the cleaner solution is here, but I'm sure one exits and it's an area
+I would like to improve. 
+
+I was also unable to make use of the compute periodic point function. This seems 
+like a more natural fit for computing non terminals, since symbols that
+return to themselves after several calls are probably non-terminal. Perhaps if
+the period is set to the number of distinct non-terminals one can determine if a 
+symbol is truly non-terminal. Filtering out non-terminals just felt more natural 
+for the problem at hand, and that's why I used it in my final solution.
