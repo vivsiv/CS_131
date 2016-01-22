@@ -26,7 +26,32 @@ let get_rules_function gram2 =
 		| (start_sym,rules_fn) -> rules_fn
 ;;
 
-(*
-let parse_prefix gram = 
+let rec match_rule rule rules_fn frag derivation accept = 
+	match frag with
+		| [] -> None
+		| frag_head::frag_tail -> 
+			match rule with
+				| [] -> accept derivation frag_tail
+				| symbol::rule_tail -> 
+					match symbol with
+						| N non_terminal -> match_rules (non_terminal) (rules_fn non_terminal) (rules_fn) (frag) (derivation) (accept)
+						| T terminal ->
+							if terminal = frag_head
+							then match_rule (rule_tail) (rules_fn) (frag_tail) (derivation) (accept)
+							else None
 
-;; *)
+and match_rules start_sym rules_list rules_fn frag derivation accept = 
+	match rules_list with
+		| [] -> None
+		| rule::rules_tail -> 
+			let added_derivation = derivation @ [(start_sym,rule)] in
+			let match_found = match_rule (rule) (rules_fn) (frag) (added_derivation) (accept) in
+			match match_found with
+				| None -> match_rules (start_sym) (rules_tail) (rules_fn) (frag) (derivation) (accept)
+				| value -> value
+;;
+
+let parse_prefix gram accept frag = 
+	match gram with
+		| (start_sym, rules_fn) -> match_rules (start_sym) (rules_fn start_sym) (rules_fn) (frag) ([]) (accept)
+;;
