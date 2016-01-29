@@ -1,3 +1,8 @@
+let accept_all derivation string = Some (derivation, string)
+let accept_empty_suffix derivation = function
+   | [] -> Some (derivation, [])
+   | _ -> None
+   
 type awksub_nonterminals = | Expr | Term | Lvalue | Incrop | Binop | Num;;
 
 let awkish_rules = 
@@ -72,5 +77,63 @@ let convert_grammar_test1 =
 
 let convert_grammar_test2 = 
 	(get_rules_function hw2_grammar) Num = (get_rules_function awkish_grammar) Num
+;;
+
+type english_nonterminals =
+  | Sentence | NounPhrase | VerbPhrase | Noun | Verb | Article | Adjective | Adverb
+;;
+
+let english_grammar = (Sentence,
+  function | Sentence -> [[N NounPhrase; N VerbPhrase]]
+    | NounPhrase -> [[N Noun]; [N Adjective; N Noun]; [N Article; N Noun]; [N Article; N NounPhrase]]
+    | VerbPhrase -> [[N Verb]; [N Verb; N NounPhrase]; [N Verb; N Adverb]]
+    | Noun -> [[T"warriors"]; [T"playing"]; [T"oracle"]]
+    | Verb -> [[T"are"]; [T "remain"]]
+    | Article -> [[T"the"]]
+    | Adjective -> [[T "1st place"];[T"2nd place"];[T"skilled"]]
+    | Adverb -> [[T "lowly"]; [T "highly"; N Adjective]])
+
+let test_0 = ((parse_prefix english_grammar accept_all ["the"; "warriors"; "are"; "playing"])
+  = Some ([(Sentence, [N NounPhrase; N VerbPhrase]); 
+	   (NounPhrase, [N Article; N Noun]); 
+	   (Article, [T "the"]);
+	   (Noun, [T "warriors"]);
+	   (VerbPhrase, [N Verb]); 
+	   (Verb, [T "are"])], ["playing"]))
+;;
+
+let test_1 = ((parse_prefix english_grammar accept_empty_suffix ["the"; "warriors"; "are"; "playing"])
+  = Some ([(Sentence, [N NounPhrase; N VerbPhrase]); 
+	   (NounPhrase, [N Article; N Noun]); 
+	   (Article, [T "the"]);
+	   (Noun, [T "warriors"]);
+	   (VerbPhrase, [N Verb; N NounPhrase]); 
+	   (Verb, [T "are"]);
+	   (NounPhrase, [N Noun]); 
+	   (Noun, [T "playing"])], []))
+;;
+
+let test_2 = ((parse_prefix english_grammar accept_empty_suffix ["the"; "1st place"; "warriors"; "remain"; "highly"; "skilled"])
+  = Some ([(Sentence, [N NounPhrase; N VerbPhrase]); 
+	   (NounPhrase, [N Article; N NounPhrase]); 
+	   (Article, [T "the"]);
+	   (NounPhrase, [N Adjective; N Noun]);
+	   (Adjective, [T "1st place"]);
+	   (Noun, [T "warriors"]);
+	   (VerbPhrase, [N Verb; N Adverb]); 
+	   (Verb, [T "remain"]); 
+	   (Adverb, [T "highly"; N Adjective]);
+	   (Adjective, [T "skilled"])], []))
+;;
+
+let test_3 = ((parse_prefix english_grammar accept_all ["the"; "1st place"; "warriors"; "remain"; "highly"; "skilled"])
+  = Some ([(Sentence, [N NounPhrase; N VerbPhrase]); 
+	   (NounPhrase, [N Article; N NounPhrase]); 
+	   (Article, [T "the"]);
+	   (NounPhrase, [N Adjective; N Noun]);
+	   (Adjective, [T "1st place"]);
+	   (Noun, [T "warriors"]);
+	   (VerbPhrase, [N Verb]); 
+	   (Verb, [T "remain"])], ["highly"; "skilled"]))
 ;;
 

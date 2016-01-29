@@ -1,0 +1,51 @@
+When I first looked at the HW2 grammar format, like many I figured we needed
+to develop a dynamically matching function that could match against all possible
+start symbols in a given grammar. That task seemed very challenging, but it had
+a relatively straight forward first step: given a symbol and a set of all rules
+in a grammar, create a rules list containing all rules for the symbol. 
+
+I implement this function by iterating through the list of all rules checking
+if the current symbol is equal to the given symbol, if it is I append
+that rule to my rules list (being careful to preserve order). Then in discussion
+the TA suggested that we only need to replicate the behavior of the matching
+function, in essence take a symbol and return the corresponding rules
+list. My get_rh_side list function does this exactly, so I convert to hw2 grammars
+by stripping the list of rules from the hw1 grammar and creating a curried 
+function with my get_rh_side list function, to mimic the matching function.
+
+In my mind the parse_prefix function broke down into 2 logical steps: 1) given
+the start symbol go through all possible rules and see if they match the given
+fragment, 2) check if all symbols within an individual rule match a fragment.
+This naturally divides my code into 2 functions: check_rh_side which accomplishes
+goal 1 and check_rule which accomplishes goal 2. The check_rh_sides is relatively
+straight-forward, go through the list of rules and call the check_rule function
+if you get a match return it otherwise check the next rule. If you're all out
+of rules return None. The check_rule function also seemed straight forward: 
+match the rule and fragment at the same time, if the rule's symbol is terminal
+and matches the fragment's head match on the tail of the rule and the tail of the
+fragment, otherwise return None. My problems arose in the non_terminal case, 
+if a symbol is non terminal there is suddenly a whole new list of rules to check
+within the check rule function. At first I thought I'd need to write another
+check_rh_side type function to check inner rh sides, but then I
+realized that would then need a check_inner_rule fn which would go on and on
+potentially forever. In discussion the TA mentioned defining mutual recursive
+functions, and this was the key. I defined the 2 functions mutually and then
+when I hit a non_terminal in check_rule I used check_rh_sides to check the
+new non terminals rule list.
+
+Even after making this change I still was not seeing the results I wanted,
+I could correctly identify some base cases that didn't match but couldn't correctly
+identify matching. With some advice from the the TA I discovered that this was
+because of my accept function. I was repeatedly passing the top level accept
+function down to the lower levels when in fact I needed to modify it to be
+a new curried version of check_rule so that the tail of the rule could be
+verified at each recursive call. Once I finished this my matcher passed the
+test cases.
+
+This matcher function implementation suffers if it encounters a path that
+involved a blind alley rule. Since it is going to make a call to check_rh_sides
+every time it encounters a non terminal symbol, a blind alley rule will get
+parse_prefix stuck in an infinite loop of calling check_rh_side then check_rule
+then check_rh_side, etc. It also can only match rules left to right, if for
+some reason a grammar had rules that needed to be validated in a special 
+order or multiple orders this would fail. 

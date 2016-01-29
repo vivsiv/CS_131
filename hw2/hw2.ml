@@ -26,32 +26,37 @@ let get_rules_function gram2 =
 		| (start_sym,rules_fn) -> rules_fn
 ;;
 
-let rec match_rule rule rules_fn frag derivation accept = 
-	match frag with
-		| [] -> None
-		| frag_head::frag_tail -> 
-			match rule with
-				| [] -> accept derivation frag_tail
-				| symbol::rule_tail -> 
+let rec check_rule rule rules_fn accept derivation frag = 
+	match rule with
+		| [] -> accept derivation frag
+		| symbol::rule_tail -> 
+			match frag with
+				| [] -> None
+				| frag_head::frag_tail -> 
 					match symbol with
-						| N non_terminal -> match_rules (non_terminal) (rules_fn non_terminal) (rules_fn) (frag) (derivation) (accept)
+						| N non_terminal -> 
+							let nt_rules_list = rules_fn non_terminal in
+							let new_accept = check_rule (rule_tail) (rules_fn) (accept) in
+							check_rh_sides (non_terminal) (nt_rules_list) (rules_fn) (new_accept) (derivation) (frag)
 						| T terminal ->
 							if terminal = frag_head
-							then match_rule (rule_tail) (rules_fn) (frag_tail) (derivation) (accept)
+							then check_rule (rule_tail) (rules_fn) (accept) (derivation) (frag_tail)
 							else None
 
-and match_rules start_sym rules_list rules_fn frag derivation accept = 
+and check_rh_sides start_sym rules_list rules_fn accept derivation frag = 
 	match rules_list with
 		| [] -> None
 		| rule::rules_tail -> 
 			let added_derivation = derivation @ [(start_sym,rule)] in
-			let match_found = match_rule (rule) (rules_fn) (frag) (added_derivation) (accept) in
+			let match_found = check_rule (rule) (rules_fn) (accept) (added_derivation) (frag) in
 			match match_found with
-				| None -> match_rules (start_sym) (rules_tail) (rules_fn) (frag) (derivation) (accept)
-				| value -> value
+				| None -> check_rh_sides (start_sym) (rules_tail) (rules_fn) (accept) (derivation) (frag)
+				| match_value -> match_value
 ;;
 
 let parse_prefix gram accept frag = 
 	match gram with
-		| (start_sym, rules_fn) -> match_rules (start_sym) (rules_fn start_sym) (rules_fn) (frag) ([]) (accept)
+		| (start_sym, rules_fn) -> 
+			let rules_list = rules_fn start_sym in
+			check_rh_sides (start_sym) (rules_list) (rules_fn) (accept) ([]) (frag)
 ;;
