@@ -6,13 +6,11 @@ class BetterSafeState implements State {
     BetterSafeState(byte[] v) { 
         value = v; 
         maxval = 127;
-        swapLock = new ReentrantLock();
     }
 
     BetterSafeState(byte[] v, byte m) { 
         value = v; 
         maxval = m; 
-        swapLock = new ReentrantLock();
     }
 
     public int size() { 
