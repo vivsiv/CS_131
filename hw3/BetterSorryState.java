@@ -6,7 +6,7 @@ class BetterSorryState implements State {
     private void initArray(byte[] v){
         value = new AtomicInteger[v.length];
         for (int i = 0; i < v.length; i++){
-            value[i] = new AtomicInteger(v[i]);
+            value[i] = new AtomicInteger((int)v[i]);
         } 
     }
    
