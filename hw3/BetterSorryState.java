@@ -1,4 +1,5 @@
 import java.util.concurrent.atomic.*;
+
 class BetterSorryState implements State {
     private AtomicInteger[] value;
     private byte maxval;
