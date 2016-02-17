@@ -62,10 +62,12 @@ matchCage(T,*(P,L)) :-
 	multiply(P,L,T,1).
 
 matchCage(T,-(D,J,K)) :- 
-	subtract(D,J,K,T).
+	subtract(D,J,K,T);
+	subtract(D,K,J,T).
 
 matchCage(T,/(Q,J,K)) :-
-	divide(Q,J,K,T).
+	divide(Q,J,K,T);
+	divide(Q,K,J,T).
 
 add(Sum,[],_,Sum).
 add(Sum,[Label|Tail],T,Acc) :-
@@ -83,14 +85,12 @@ multiply(Product,[Label|Tail],T,Acc) :-
 subtract(Difference,J,K,T) :-
 	getElement(J,T,E1),
 	getElement(K,T,E2),
-	Difference #= E1 - E2;
-	Difference #= E2 - E1.
+	Difference #= E1 - E2.
 
 divide(Quotient,J,K,T) :-
 	getElement(J,T,E1),
 	getElement(K,T,E2),
-	Quotient #= E1//E2;
-	Quotient #= E2//E1.
+	Quotient #= E1//E2.
 
 getElement(I-J,T,Elem) :-
 	nth(I,T,Row),
