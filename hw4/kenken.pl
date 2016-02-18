@@ -254,3 +254,56 @@ kenken_testcase3(
 %% statistics(local_stack, [SinceStart | [SinceLast]]), kenken_testcase2(N,C), plain_kenken(N,C,T), statistics(local_stack, [NewSinceStart | [ExecutionMemory]]),write('Local Stack is: '), write(ExecutionMemory), write(' bytes'), nl.
 %% --> Local stack is: 16768688 bytes
 %% --> About the same
+
+%% No Op KenKen API
+%% C is now a list of constraints matching the form (<int>, <list of squares>) or (<int>, <square>, <square>)
+%% no_op_kenken still checks:
+%%  - the length of all rows and columns in validBoard
+%%  - that each row is a permutation of the list of ints from 1 to N
+%%  - that each column is a permutation of the list of ints from 1 to N
+%%  - if we are using the fd_domain solver we still want to constrain the values each square to get a result.
+%% no_op_kenken(N,C,T) :-
+%% 	validBoard(N,T),
+%% 	validRows(T),
+%% 	validColumns(T),
+%% 	validCages(T,C),
+%% 	constrainSolution(T).
+
+%% validBoard checks the length each row and column
+%% validBoard(N,T).
+
+%% validRows checks that each row is a permutation of the list of ints from 1 to N
+%% validRows(T).
+
+%% validColumns checks that each column is a permutation of the list of ints from 1 to N
+%% validColumns(T).
+
+%% Runs validCage on all Cages in C
+%% validCages(T,C).
+
+%% validates a cage using matchCage
+%% validCage(T,Cage).
+
+%% matches cages with a list of indices second argument
+%% - needs to check if add or multiply satisfies the cage.
+%% matchCage(T,(S,L)) :-
+%% 	add(S,L,T,0);
+%% 	multiply(S,L,T,1).
+
+%% matches cages with two indice arguments
+%% - needs to check if subtract or divide satisfies the cage
+%% matchCage(T,(D,J,K)) :-
+%% 	subtract(D,J,K,T);
+%% 	subtract(D,K,J,T);
+%% 	divide(D,J,K,T);
+%% 	divide(D,K,J,T).
+
+%% Methods for computing cage arithmetic
+%% add(Sum,List,T,Acc).
+%% multiply(Product,List,T,Acc).
+%% subtract(Difference,J,K,T).
+%% divide(Quotient,J,K,T).
+
+%% Constrains the solution using f_domain solver
+%% constrainSolution(T).
+
