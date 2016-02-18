@@ -99,65 +99,8 @@ getElement(I-J,T,Elem) :-
 constrainSolution(T) :-
 	maplist(fd_labeling,T).
 
-add(10,[1-4,2-2,3-1],[[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],0).
-multiply(32,[1-4,2-2,3-1],[[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],1).
-subtract(2,1-4,2-2,[[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]]).
-divide(2,1-4,2-2,[[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]]).
-validCage([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],+(10,[1-4,2-2,3-1])).
-validCage([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],*(32,[1-4,2-2,3-1])).
-validCage([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],-(2,1-4,2-2)).
-validCage([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],-(2,2-2,1-4)).
-validCage([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],/(2,1-4,2-2)).
-validCage([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],/(2,2-2,1-4)).
 
-kenken_testcase(
-  6,
-  [
-   +(11, [1-1, 2-1]),
-   /(2, 1-2, 1-3),
-   *(20, [1-4, 2-4]),
-   *(6, [1-5, 1-6, 2-6, 3-6]),
-   -(3, 2-2, 2-3),
-   /(3, 2-5, 3-5),
-   *(240, [3-1, 3-2, 4-1, 4-2]),
-   *(6, [3-3, 3-4]),
-   *(6, [4-3, 5-3]),
-   +(7, [4-4, 5-4, 5-5]),
-   *(30, [4-5, 4-6]),
-   *(6, [5-1, 5-2]),
-   +(9, [5-6, 6-6]),
-   +(8, [6-1, 6-2, 6-3]),
-   /(2, 6-4, 6-5)
-  ]
-).
 
-kenken(
-  6,
-  [
-   +(11, [1-1, 2-1]),
-   /(2, 1-2, 1-3),
-   *(20, [1-4, 2-4]),
-   *(6, [1-5, 1-6, 2-6, 3-6]),
-   -(3, 2-2, 2-3),
-   /(3, 2-5, 3-5),
-   *(240, [3-1, 3-2, 4-1, 4-2]),
-   *(6, [3-3, 3-4]),
-   *(6, [4-3, 5-3]),
-   +(7, [4-4, 5-4, 5-5]),
-   *(30, [4-5, 4-6]),
-   *(6, [5-1, 5-2]),
-   +(9, [5-6, 6-6]),
-   +(8, [6-1, 6-2, 6-3]),
-   /(2, 6-4, 6-5)
-  ],[[5,6,3,4,1,2],
-     [6,1,4,5,2,3],
-     [4,5,2,3,6,1],
-     [3,4,1,2,5,6],
-     [2,3,6,1,4,5],
-     [1,2,5,6,3,4]]
-).
-
-%tested with 
 plain_kenken(N,C,T) :-
 	validBoard_P(N,T),
 	validRows_P(N,T),
@@ -235,18 +178,35 @@ divide_P(Quotient,J,K,T) :-
 	getElement(K,T,E2),
 	Quotient is E1//E2.
 
+% Don't run with plain_kenken!
+kenken_testcase(
+  6,
+  [
+   +(11, [1-1, 2-1]),
+   /(2, 1-2, 1-3),
+   *(20, [1-4, 2-4]),
+   *(6, [1-5, 1-6, 2-6, 3-6]),
+   -(3, 2-2, 2-3),
+   /(3, 2-5, 3-5),
+   *(240, [3-1, 3-2, 4-1, 4-2]),
+   *(6, [3-3, 3-4]),
+   *(6, [4-3, 5-3]),
+   +(7, [4-4, 5-4, 5-5]),
+   *(30, [4-5, 4-6]),
+   *(6, [5-1, 5-2]),
+   +(9, [5-6, 6-6]),
+   +(8, [6-1, 6-2, 6-3]),
+   /(2, 6-4, 6-5)
+  ]
+).
+%% [[5,6,3,4,1,2],
+%%  [6,1,4,5,2,3],
+%%  [4,5,2,3,6,1],
+%%  [3,4,1,2,5,6],
+%%  [2,3,6,1,4,5],
+%%  [1,2,5,6,3,4]]
 
-add_P(10,[1-4,2-2,3-1],[[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],0).
-multiply_P(32,[1-4,2-2,3-1],[[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],1).
-subtract_P(2,1-4,2-2,[[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]]).
-divide_P(2,1-4,2-2,[[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]]).
-validCage_P([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],+(10,[1-4,2-2,3-1])).
-validCage_P([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],*(32,[1-4,2-2,3-1])).
-validCage_P([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],-(2,1-4,2-2)).
-validCage_P([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],-(2,2-2,1-4)).
-validCage_P([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],/(2,1-4,2-2)).
-validCage_P([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],/(2,2-2,1-4)).
-
+% Used for running statistics/2
 kenken_testcase2(
   4,
   [
@@ -259,22 +219,10 @@ kenken_testcase2(
    *(3, [3-4, 4-4])
   ]
 ).
-
-kenken(
-  4,
-  [
-   +(8, [1-1,2-1,3-1]),
-   -(2, 1-2, 1-3),
-   /(2, 1-4, 2-4),
-   /(2, 2-2, 2-3),
-   *(24, [3-2,4-1,4-2]),
-   -(2, 3-3, 4-3),
-   *(3, [3-4, 4-4])
-  ],[[4,1,3,2],
-  	[3,2,1,4],
-  	[1,4,2,3],
-  	[2,3,4,1]]
-).
+%% [[4,1,3,2],
+%%  [3,2,1,4],
+%%  [1,4,2,3],
+%%  [2,3,4,1]]
 
 kenken_testcase3(
 	3,
@@ -285,33 +233,24 @@ kenken_testcase3(
      *(3, [2-3,3-3])
    ]
 ).
+%% [[1,3,2],
+%%  [2,1,3],
+%%  [3,2,1]]
 
-plain_kenken(
-	3,
-	[
-     *(2, [1-1,2-1,2-2]),
-     -(1, 1-2, 1-3),
-     -(1, 3-1, 3-2),
-     *(3, [2-3,3-3])
-   ], [[1,3,2],
-   	  [2,1,3],
-   	  [3,2,1]]
-).
+%% statistics(cpu_time, [SinceStart | [SinceLast]]), fd_set_vector_max(255), kenken_testcase2(N,C), kenken(N,C,T), statistics(cpu_time, [NewSinceStart | [ExecutionTime]]),write('Execution took: '), write(ExecutionTime), write(' ms.'), nl.
+%% --> Execution took: 2 ms.
+%% statistics(cpu_time, [SinceStart | [SinceLast]]), kenken_testcase2(N,C), plain_kenken(N,C,T), statistics(cpu_time, [NewSinceStart | [ExecutionTime]]),write('Execution took: '), write(ExecutionTime), write(' ms.'), nl.
+%% --> Execution took: 1172 ms.
+%% --> kenken is 586 times faster.
 
-statistics(cpu_time, [SinceStart | [SinceLast]]), fd_set_vector_max(255), kenken_testcase2(N,C), kenken(N,C,T), statistics(cpu_time, [NewSinceStart | [ExecutionTime]]),write('Execution took: '), write(ExecutionTime), write(' ms.'), nl.
-% --> Execution took: 2 ms.
-statistics(cpu_time, [SinceStart | [SinceLast]]), kenken_testcase2(N,C), plain_kenken(N,C,T), statistics(cpu_time, [NewSinceStart | [ExecutionTime]]),write('Execution took: '), write(ExecutionTime), write(' ms.'), nl.
-% --> Execution took: 1172 ms.
-% --> kenken is 586 times faster.
+%% statistics(global_stack, [SinceStart | [SinceLast]]), fd_set_vector_max(255), kenken_testcase2(N,C), kenken(N,C,T), statistics(global_stack, [NewSinceStart | [ExecutionMemory]]),write('Global Stack is:'), write(ExecutionMemory), write(' bytes'), nl.
+%% --> Global stack is: 33547024 bytes
+%% statistics(global_stack, [SinceStart | [SinceLast]]), kenken_testcase2(N,C), plain_kenken(N,C,T), statistics(global_stack, [NewSinceStart | [ExecutionMemory]]),write('Global Stack is: '), write(ExecutionMemory), write(' bytes'), nl.
+%% --> Global stack is: 33546480 bytes
+%% --> About the same
 
-statistics(global_stack, [SinceStart | [SinceLast]]), fd_set_vector_max(255), kenken_testcase2(N,C), kenken(N,C,T), statistics(global_stack, [NewSinceStart | [ExecutionMemory]]),write('Global Stack is:'), write(ExecutionMemory), write(' bytes'), nl.
-% --> Global stack is: 33547024 bytes
-statistics(global_stack, [SinceStart | [SinceLast]]), kenken_testcase2(N,C), plain_kenken(N,C,T), statistics(global_stack, [NewSinceStart | [ExecutionMemory]]),write('Global Stack is: '), write(ExecutionMemory), write(' bytes'), nl.
-% --> Global stack is: 33546480 bytes
-% --> About the same
-
-statistics(local_stack, [SinceStart | [SinceLast]]), fd_set_vector_max(255), kenken_testcase2(N,C), kenken(N,C,T), statistics(local_stack, [NewSinceStart | [ExecutionMemory]]),write('Local Stack is:'), write(ExecutionMemory), write(' bytes'), nl.
-% --> Local stack is: 16774200 bytes
-statistics(local_stack, [SinceStart | [SinceLast]]), kenken_testcase2(N,C), plain_kenken(N,C,T), statistics(local_stack, [NewSinceStart | [ExecutionMemory]]),write('Local Stack is: '), write(ExecutionMemory), write(' bytes'), nl.
-% --> Local stack is: 16768688 bytes
-% --> About the same
+%% statistics(local_stack, [SinceStart | [SinceLast]]), fd_set_vector_max(255), kenken_testcase2(N,C), kenken(N,C,T), statistics(local_stack, [NewSinceStart | [ExecutionMemory]]),write('Local Stack is:'), write(ExecutionMemory), write(' bytes'), nl.
+%% --> Local stack is: 16774200 bytes
+%% statistics(local_stack, [SinceStart | [SinceLast]]), kenken_testcase2(N,C), plain_kenken(N,C,T), statistics(local_stack, [NewSinceStart | [ExecutionMemory]]),write('Local Stack is: '), write(ExecutionMemory), write(' bytes'), nl.
+%% --> Local stack is: 16768688 bytes
+%% --> About the same
