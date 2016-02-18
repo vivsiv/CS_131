@@ -157,10 +157,11 @@ kenken(
      [1,2,5,6,3,4]]
 ).
 
+%tested with 
 plain_kenken(N,C,T) :-
 	validBoard_P(N,T),
 	validRows_P(N,T),
-	validColumns_P(N,T),
+	validColumns_P(T),
 	validCages_P(T,C).
 
 validBoard_P(N,T) :-
@@ -176,9 +177,9 @@ nList(Start,End,[Head|Tail]) :-
 
 validRows_P(N,T) :-
 	nList(1,N,NList),
-	maplist(validRowNumbers_P(NList),T).
+	maplist(validRow_P(NList),T).
 
-validRow_P(Row) :-
+validRow_P(NList,Row) :-
 	permutation(NList,Row).
 
 validColumns_P(T) :-
@@ -246,7 +247,7 @@ validCage_P([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],-(2,2-2,1-4)).
 validCage_P([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],/(2,1-4,2-2)).
 validCage_P([[2,1,3,4],[1,2,3,4],[4,3,2,1],[3,1,2,4]],/(2,2-2,1-4)).
 
-plain_kenken_testcase(
+kenken_testcase2(
   4,
   [
    +(8, [1-1,2-1,3-1]),
@@ -259,7 +260,7 @@ plain_kenken_testcase(
   ]
 ).
 
-plain_kenken(
+kenken(
   4,
   [
    +(8, [1-1,2-1,3-1]),
@@ -275,7 +276,7 @@ plain_kenken(
   	[2,3,4,1]]
 ).
 
-plain_kenken_testcase2(
+kenken_testcase3(
 	3,
 	[
      *(2, [1-1,2-1,2-2]),
@@ -297,30 +298,20 @@ plain_kenken(
    	  [3,2,1]]
 ).
 
-%% plain_kenken_testcase2(
-%% 	3,
-%% 	[
-%%      *(2, [1-1,2-1,2-2]),
-%%      -(1, 1-2, 1-3),
-%%      -(1, 3-1, 3-2),
-%%      *(3, [3-1,3-2]),
-%%   ]
-%% ).
+statistics(cpu_time, [SinceStart | [SinceLast]]), fd_set_vector_max(255), kenken_testcase2(N,C), kenken(N,C,T), statistics(cpu_time, [NewSinceStart | [ExecutionTime]]),write('Execution took: '), write(ExecutionTime), write(' ms.'), nl.
+% --> Execution took: 2 ms.
+statistics(cpu_time, [SinceStart | [SinceLast]]), kenken_testcase2(N,C), plain_kenken(N,C,T), statistics(cpu_time, [NewSinceStart | [ExecutionTime]]),write('Execution took: '), write(ExecutionTime), write(' ms.'), nl.
+% --> Execution took: 1172 ms.
+% --> kenken is 586 times faster.
 
+statistics(global_stack, [SinceStart | [SinceLast]]), fd_set_vector_max(255), kenken_testcase2(N,C), kenken(N,C,T), statistics(global_stack, [NewSinceStart | [ExecutionMemory]]),write('Global Stack is:'), write(ExecutionMemory), write(' bytes'), nl.
+% --> Global stack is: 33547024 bytes
+statistics(global_stack, [SinceStart | [SinceLast]]), kenken_testcase2(N,C), plain_kenken(N,C,T), statistics(global_stack, [NewSinceStart | [ExecutionMemory]]),write('Global Stack is: '), write(ExecutionMemory), write(' bytes'), nl.
+% --> Global stack is: 33546480 bytes
+% --> About the same
 
-
-%% permNList(N,List) :-
-%% 	nList(1,N,Nlist),
-%% 	permutation(Nlist,List).
-
-%% validRow(N,Row) :- permNList(N,Row).
-
-%% validRows(N,T) :- maplist(validRow(N),T).
-
-%% validColumn(N,Col) :- permNList(N,Col).
-
-%% validColumns(N,T) :-
-%% 	transpose(T,Trans),
-%% 	validRows(N,Trans).
-
-%% validRow(4,R).
+statistics(local_stack, [SinceStart | [SinceLast]]), fd_set_vector_max(255), kenken_testcase2(N,C), kenken(N,C,T), statistics(local_stack, [NewSinceStart | [ExecutionMemory]]),write('Local Stack is:'), write(ExecutionMemory), write(' bytes'), nl.
+% --> Local stack is: 16774200 bytes
+statistics(local_stack, [SinceStart | [SinceLast]]), kenken_testcase2(N,C), plain_kenken(N,C,T), statistics(local_stack, [NewSinceStart | [ExecutionMemory]]),write('Local Stack is: '), write(ExecutionMemory), write(' bytes'), nl.
+% --> Local stack is: 16768688 bytes
+% --> About the same
