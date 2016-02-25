@@ -5,7 +5,7 @@
 			(cond
 				[(and (equal? lit1 #t) (equal? lit2 #f)) 'TCP]
 				[(and (equal? lit1 #f) (equal? lit2 #t)) '(not TCP)]
-				[(cons 'if (cons 'TCP (cons lit1 (cons lit2 '()))))]
+				[else (cons 'if (cons 'TCP (cons lit1 (cons lit2 '()))))]
 			)
 		)
 	)
@@ -15,7 +15,7 @@
 	(lambda (l1 l2)
 		(cond
 			[(or (null? l1) (null? l2)) '()]
-			[(cons (compare-expr (car l1) (car l2)) (compare-lists (cdr l1) (cdr l2)))]
+			[else (cons (compare-expr (car l1) (car l2)) (compare-lists (cdr l1) (cdr l2)))]
 		)
 	)
 )
@@ -24,9 +24,25 @@
 	(lambda (e1 e2)
 		(if (and (list? e1) (list? e2))
 			(cond 
-				[(equal? (length e1) (length e2)) (compare-lists e1 e2)]
-				[(compare-literals e1 e2)] 
+				[(equal? (length e1) (length e2))
+					;equal first elements 
+					(if (equal? (car e1) (car e2))
+						(cond
+							;handling quotes
+							[(equal? (car e1) 'quote) (compare-literals e1 e2)]
+							;handling conditionals
+							[(equal? (car e1) 'if) (compare-lists e1 e2)]
+							;any other list
+							[else (compare-lists e1 e2)]
+						)
+						;unequal first elements
+						(compare-literals e1 e2)
+					)
+				]
+				;unequal length lists
+				[else (compare-literals e1 e2)] 
 			)
+			;not lists
 			(compare-literals e1 e2)
 		)
 	)
@@ -54,7 +70,10 @@
 
 (equal? (compare-expr ''(a b) ''(a c)) '(if TCP '(a b) '(a c)))
 (equal? (compare-expr '(quote (a b)) '(quote (a c))) '(if TCP '(a b) '(a c)))
+(equal? (compare-expr '(quote (a b)) '(f (a c))) '(if TCP '(a b) (f (a c))))
 
+(equal? (compare-expr '(if x y z) '(if x z z)) '(if x (if TCP y z) z))
+(equal? (compare-expr '(if x y z) '(g x y z)) '(if TCP (if x y z) (g x y z)))
 
 
 
