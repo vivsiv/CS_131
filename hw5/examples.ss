@@ -62,3 +62,81 @@
 		  (double-any cons 'a)
 	)
 )
+
+; x is a 'free variable' y is not since it is bound to the lambda
+(let ([x 2])
+	(let ([f (lambda (y) (+ x y))])
+		(f 4)
+	)
+)
+
+; x in lambda shadows x in outer let
+(let ([x 2])
+	(let ([f (lambda (x) (+ x x))])
+		(f 4)
+	)
+)
+
+;x is bound to the list (1 2 3 4)
+(let ([f (lambda x x)])
+  (f 1 2 3 4))
+
+(let ([f (lambda x x)])
+  (f))
+
+(let ([g (lambda (x . y) (list x y))])
+  (g 1 2 3 4))
+
+(let ([h (lambda (x y . z) (list x y z))])
+  (h 'a 'b 'c 'd))
+
+(define cadr
+	(lambda (x) (car (cdr x)))
+)
+(cadr '(1 2 3 4))
+
+(define cddr
+	(lambda (x) (cdr (cdr x)))
+)
+(cddr '(1 2 3 4))
+
+(define abs
+	(lambda (n) 
+		(if (< 0 n) n (- 0 n))
+	)
+)
+
+(define sign
+	(lambda (n)
+		(cond 
+			[(< n 0) '-]
+			[(= n 0) '0]
+			[(> n 0) '+]
+		)
+	)
+)
+(sign -1)
+(sign 0)
+(sign +1)
+
+(define length
+	(lambda (ls)
+		(if (null? ls)
+			0
+			(+ 1 (length (cdr ls)))
+		)
+	)
+)
+(length '())
+(length '(a))
+(length '(a b))
+
+(define map
+	(lambda (f ls)
+		(if (null? ls)
+			'()
+			(cons (f (car ls)) (map f (cdr ls)))
+		)
+	)
+)
+(map (lambda (x) (* x x)) '(1 2 3 4))
