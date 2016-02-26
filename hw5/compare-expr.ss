@@ -98,6 +98,19 @@
 	)
 )
 
+(define test-x
+	'(cons (let ((a 1) (b 2)) (if (< a b) (+ a b) (* a b)))
+		(cons (+ ((lambda (a b) (+ (* a a) (* b b))) 2 4) (if #t 10 20))
+			(cons (let ((c 3) (h 5)) (lambda (x y) (+ x y)) c h)
+				(cons (let ((r #t)) (if r 2 3)) '()))))
+)
+
+(define test-y
+	'(cons (let ((a 4) (b 3)) (if (< a b) (- a b) (* a b)))
+		(cons (+ ((lambda (a b) (- (* a a) (* b b))) 4 8) (if #f 10 20))
+			(cons (let ((q 3) (z 5)) (lambda (f r) (+ f r)) q z)
+				(cons (let ((f +)) (f 2 3)) '()))))
+)
 
 ; (display "1. ") (display (equal? (compare-expr 12 12) 12)) (newline)
 ; (display "2. ") (display (equal? (compare-expr 12 20) '(if TCP 12 20))) (newline)
