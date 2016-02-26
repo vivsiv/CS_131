@@ -11,61 +11,72 @@
 	)
 )
 
+
 (define compare-lists
 	(lambda (l1 l2)
 		(cond
 			[(or (null? l1) (null? l2)) '()]
+			;compare heads as expressions 
 			[else (cons (compare-expr (car l1) (car l2)) (compare-lists (cdr l1) (cdr l2)))]
 		)
 	)
 )
 
-(define compare-bindings
+(define equal-variables
 	(lambda (b1 b2)
+		(if (and (null? b1) (null? b2))
+			#t
+			(let ([var1 (car (car b1))] [var2 (car (car b2))])
+				(cond
+					[(equal? var1 var2) (equal-variables (cdr b1) (cdr b2))]
+					[else #f]
+				)
+			)
+		)
+	)
+)
+
+(define compare-lets
+	(lambda (l1 l2)
+		(let ([bind1 (car (cdr l1))] [bind2 (car (cdr l2))])
+			(cond
+				[(equal-variables bind1 bind2) (compare-lists l1 l2)]
+				[else (compare-literals l1 l2)]
+			)
+		)
+	)
+)
+
+
+(define compare-lambdas
+	(lambda (l1 l2)
+		(let ([form1 (car (cdr l1))] [form2 (car (cdr l2))])
+			(cond 
+				;match as lists if formals are same
+				[(equal? form1 form2) (compare-lists l1 l2)]
+				;otherwise match as literals
+				[else (compare-literals l1 l2)]
+			)
+		)
+	)
+)
+
+
+(define contains-function
+	(lambda (e1 e2)
 		(cond
-			[(and (equal? b1 '()) (equal? b2 '())) #t]
-			[(equal? (car (car b1)) (car (car b2))) (compare-bindings (cdr b1) (cdr b2))]
+			[(equal? (car e1) 'quote) #t]
+			[(equal? (car e2) 'quote) #t]
+			[(equal? (car e1) 'if) #t]
+			[(equal? (car e2) 'if) #t]
+			[(equal? (car e1) 'let) #t]
+			[(equal? (car e2) 'let) #t]
+			[(equal? (car e1) 'lambda) #t]
+			[(equal? (car e2) 'lambda) #t]
 			[else #f]
 		)
 	)
 
-)
-
-(define compare-lets 
-	(lambda (l1 l2)
-		(let (
-				[bind1 (car (cdr l1))]
-				[bind2 (car (cdr l2))]
-			)
-			(if (compare-bindings bind1 bind2)
-				(compare-lists l1 l2)
-				(compare-literals l1 l2)
-			)
-		)
-	)
-)
-
-(define compare-lambdas
-	(lambda (l1 l2)
-		(let (
-				[form1 (car (cdr (car l1)))]
-				[form2 (car (cdr (car l2)))]
-				[body1 (car (cdr (cdr (car l1))))]
-				[body2 (car (cdr (cdr (car l2))))]
-				[res1 (cdr l1)]
-				[res2 (cdr l2)]
-			)
-			(if (equal? form1 form2)
-				(append
-					(cons (list 'lambda form1 (compare-lists body1 body2)) '())
-					(compare-lists res1 res2)
-				)
-				(append (cons (compare-literals (car l1) (car l2)) '())
-						(compare-lists res1 res2)
-				)
-			)
-		)
-	)
 )
 
 (define compare-expr
@@ -73,30 +84,27 @@
 		(if (and (list? e1) (list? e2))
 			(cond 
 				[(equal? (length e1) (length e2))
-					;equal first elements 
+					;equal first elements (likely both the same fn)
 					(if (equal? (car e1) (car e2))
-						(cond
+						(case (car e1)
 							;handling quotes
-							[(equal? (car e1) 'quote) (compare-literals e1 e2)]
+							('quote (compare-literals e1 e2))
 							;handling conditionals
-							[(equal? (car e1) 'if) (compare-lists e1 e2)]
+							('if (compare-lists e1 e2))
 							;handling let's
-							[(equal? (car e1) 'let) (compare-lets e1 e2)]
+							('let (compare-lets e1 e2))
 							;handling lambda's
-							; [(equal? (car e1) 'lambda) (compare-lambdas e1 e2)]
+							('lambda (compare-lambdas e1 e2))
 							;any other list
-							[else (compare-lists e1 e2)]
+							(else (compare-lists e1 e2))
 						)
-						;equal first elements of first lists
-						; (if (equal? (car (car e1)) (car (car e2)))
-						; 	;handling lambda's
-						; 	((equal? (car (car e1)) 'lambda) (compare-lambdas e1 e2))
-						; 	;unequal elements
-						; 	(compare-literals e1 e2)
-
-						; )
 						;unequal first elements
-						(compare-literals e1 e2)
+						(if (contains-function e1 e2)
+							;compare as literals if either first elem is a fn
+							(compare-literals e1 e2)
+							;otherwise try to compare as lists
+							(compare-lists e1 e2)
+						)
 					)
 				]
 				;unequal length lists
@@ -136,29 +144,18 @@
 (equal? (compare-expr '(if x y z) '(g x y z)) '(if TCP (if x y z) (g x y z)))
 
 (equal? (compare-expr '(let ((a 1)) (f a)) '(let ((a 2)) (g a))) '(let ((a (if TCP 1 2))) ((if TCP f g) a)))
+(equal? (compare-expr '(+ #f (let ((a 1) (b 2)) (f a b))) '(+ #t (let ((a 1) (c 2)) (f a c))))
+	'(+ (not TCP) (if TCP (let ((a 1) (b 2)) (f a b)) (let ((a 1) (c 2)) (f a c)))))
 
-(compare-expr '(+ #f (let ((a 1) (b 2)) (f a b))) '(+ #t (let ((a 1) (c 2)) (f a c)))) 
-(equal? (compare-expr '(let ((a 1) (b 2)) (f a b)) '(let ((a 1) (c 2)) (f a c))) 
-	'(if TCP (let ((a 1) (b 2)) (f a b)) (let ((a 1) (c 2)) (f a c))))
-	; '(+ (not TCP) (if TCP (let ((a 1) (b 2)) (f a b)) (let ((a 1) (c 2)) (f a c))))
 
-(equal? (compare-lambdas '((lambda (a) (f a)) 1) '((lambda (a) (g a)) 2)) '((lambda (a) ((if TCP f g) a)) (if TCP 1 2)))
-(equal? (compare-lambdas '((lambda (a b) (f a b)) 1 2) '((lambda (a b) (f b a)) 1 2))
+(equal? (compare-expr '((lambda (a) (f a)) 1) '((lambda (a) (g a)) 2)) '((lambda (a) ((if TCP f g) a)) (if TCP 1 2)))
+(equal? (compare-expr '((lambda (a b) (f a b)) 1 2) '((lambda (a b) (f b a)) 1 2))
 	'((lambda (a b) (f (if TCP a b) (if TCP b a))) 1 2))
-(equal? (compare-lambdas '((lambda (a b) (f a b)) 1 2) '((lambda (a c) (f c a)) 1 2))
+(equal? (compare-expr '((lambda (a b) (f a b)) 1 2) '((lambda (a c) (f c a)) 1 2))
  	'((if TCP (lambda (a b) (f a b)) (lambda (a c) (f c a))) 1 2))
 
-; (equal? (compare-expr '((lambda (a) (f a)) 1) '((lambda (a) (g a)) 2)) '((lambda (a) ((if TCP f g) a)) (if TCP 1 2)))
-; (equal? (compare-expr '((lambda (a b) (f a b)) 1 2) '((lambda (a b) (f b a)) 1 2))
-; 	'((lambda (a b) (f (if TCP a b) (if TCP b a))) 1 2))
-; (equal? (compare-expr '((lambda (a b) (f a b)) 1 2) '((lambda (a c) (f c a)) 1 2))
-;  	'((if TCP (lambda (a b) (f a b)) (lambda (a c) (f c a))) 1 2))
+(equal-bindings '((a 1) (f a)) '((a 2) (g a)))
+(compare-literals '((a 1) (f a)) '((a 2) (g a)))
 
-
-; (car (cdr (car '((lambda (a b) (f a b)) 1 2))))
-; (car (cdr (cdr (car '((lambda (a b) (f a b)) 1 2)))))
-; (cdr '((lambda (a b) (f a b)) 1 2))
-; (car '((lambda (a b) (f a b)) 1 2))
-
-; (car (cdr (car '((lambda (a b) (f b a)) 1 2))))
-
+(compare-lets '(let ((a 1)) (f a)) '(let ((a 2)) (g a)))
+(compare-lets '(let ((a 1) (b 2)) (f a b)) '(let ((a 1) (c 2)) (f a c)))
