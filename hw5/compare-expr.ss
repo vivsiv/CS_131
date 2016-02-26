@@ -22,47 +22,20 @@
 	)
 )
 
-(define equal-variables
-	(lambda (b1 b2)
-		(if (and (null? b1) (null? b2))
-			#t
-			(let ([var1 (car (car b1))] [var2 (car (car b2))])
-				(cond
-					[(equal? var1 var2) (equal-variables (cdr b1) (cdr b2))]
-					[else #f]
-				)
-			)
-		)
-	)
-)
-
-(define compare-lets
-	(lambda (l1 l2)
-		(let ([bind1 (car (cdr l1))] [bind2 (car (cdr l2))])
-			(cond
-				[(equal-variables bind1 bind2) (compare-lists l1 l2)]
-				[else (compare-literals l1 l2)]
-			)
-		)
-	)
-)
-
-
-(define compare-lambdas
-	(lambda (l1 l2)
-		(let ([form1 (car (cdr l1))] [form2 (car (cdr l2))])
+(define compare-built-ins
+	(lambda (e1 e2 proc)
+		(let ([vars1 (car (cdr e1))] [vars2 (car (cdr e2))])
 			(cond 
-				;match as lists if formals are same
-				[(equal? form1 form2) (compare-lists l1 l2)]
-				;otherwise match as literals
-				[else (compare-literals l1 l2)]
+				;compare as lists if variables are same
+				[(proc vars1 vars2) (compare-lists e1 e2)]
+				;otherwise compare as literals
+				[else (compare-literals e1 e2)]
 			)
 		)
 	)
 )
 
-
-(define contains-function
+(define contains-built-in
 	(lambda (e1 e2)
 		(cond
 			[(equal? (car e1) 'quote) #t]
@@ -76,86 +49,77 @@
 			[else #f]
 		)
 	)
-
 )
 
 (define compare-expr
 	(lambda (e1 e2)
-		(if (and (list? e1) (list? e2))
-			(cond 
-				[(equal? (length e1) (length e2))
-					;equal first elements (likely both the same fn)
-					(if (equal? (car e1) (car e2))
-						(case (car e1)
-							;handling quotes
-							('quote (compare-literals e1 e2))
-							;handling conditionals
-							('if (compare-lists e1 e2))
-							;handling let's
-							('let (compare-lets e1 e2))
-							;handling lambda's
-							('lambda (compare-lambdas e1 e2))
-							;any other list
-							(else (compare-lists e1 e2))
-						)
-						;unequal first elements
-						(if (contains-function e1 e2)
-							;compare as literals if either first elem is a fn
-							(compare-literals e1 e2)
-							;otherwise try to compare as lists
-							(compare-lists e1 e2)
-						)
+		;if expressions are both lists of the same length try to evaluate as lists
+		(if (and 
+				(and (list? e1) (list? e2)) 
+				(equal? (length e1) (length e2))
+			)
+			(cond
+				;equal first elements try as built-in or plain list
+				[(equal? (car e1) (car e2))
+					;handle built-ins
+					(case (car e1)
+						;handling quotes
+						['quote (compare-literals e1 e2)]
+						;handling conditionals
+						['if (compare-lists e1 e2)]
+						;handling let's
+						['let (compare-built-ins e1 e2 (lambda (x y) (equal? (map car x) (map car y))))]
+						;handling lambda's
+						['lambda (compare-built-ins e1 e2 (lambda (x y) (equal? x y)))]
+						;any other list
+						[else (compare-lists e1 e2)]
 					)
 				]
-				;unequal length lists
-				[else (compare-literals e1 e2)] 
+				;unequal first elements, try as lists unless one side is a built-in
+				[(contains-built-in e1 e2) (compare-literals e1 e2)]
+				[else (compare-lists e1 e2)]
 			)
-			;not lists
+			;if not lists of the same length just evaluate as literals
 			(compare-literals e1 e2)
 		)
 	)
 )
 
-(equal? (compare-expr 12 12) 12)
-(equal? (compare-expr 12 20) '(if TCP 12 20))
-(equal? (compare-expr #t #t) #t)
-(equal? (compare-expr #f #f) #f)
-(equal? (compare-expr #t #f) 'TCP)
-(equal? (compare-expr #f #t) '(not TCP))
 
-(equal? (compare-expr '(12 12) '(12 12)) '(12 12))
-(equal? (compare-expr '(12 12) '(12 20)) '(12 (if TCP 12 20)))
-(equal? (compare-expr '(12 (12 24)) '(12 (12 20))) '(12 (12 (if TCP 24 20))))
-(equal? (compare-expr '(12 (12 24) 48) '(12 (12 20) 40)) '(12 (12 (if TCP 24 48)) (if TCP 48 40)))
+(display "1. ") (display (equal? (compare-expr 12 12) 12)) (newline)
+(display "2. ") (display (equal? (compare-expr 12 20) '(if TCP 12 20))) (newline)
+(display "3. ") (display (equal? (compare-expr #t #t) #t)) (newline)
+(display "4. ") (display (equal? (compare-expr #f #f) #f)) (newline)
+(display "5. ") (display (equal? (compare-expr #t #f) 'TCP)) (newline)
+(display "6. ") (display (equal? (compare-expr #f #t) '(not TCP))) (newline)
 
-(equal? (compare-expr 'a '(cons a b)) '(if TCP a (cons a b)))
-(equal? (compare-expr '(cons a b) '(cons a b)) '(cons a b))
-(equal? (compare-expr '(cons a b) '(cons a c)) '(cons a (if TCP b c)))
-(equal? (compare-expr '(cons (cons a b) (cons b c)) '(cons (cons a c) (cons a c))) '(cons (cons a (if TCP b c)) (cons (if TCP b a) c)))
-(equal? (compare-expr '(cons a b) '(list a b)) '((if TCP cons list) a b))
-(equal? (compare-expr '(list) '(list a)) '(if TCP (list) (list a)))
-(equal? (compare-expr '(quoth (a b)) '(quoth (a c))) '(quoth (a (if TCP b c))))
+(display "7. ") (display (equal? (compare-expr '(12 12) '(12 12)) '(12 12))) (newline)
+(display "8. ") (display (equal? (compare-expr '(12 12) '(12 20)) '(12 (if TCP 12 20)))) (newline)
+(display "9. ") (display (equal? (compare-expr '(12 (12 24)) '(12 (12 20))) '(12 (12 (if TCP 24 20))))) (newline)
+(display "10. ") (display (equal? (compare-expr '(12 (12 24) 48) '(12 (12 20) 40)) '(12 (12 (if TCP 24 20)) (if TCP 48 40)))) (newline)
 
-(equal? (compare-expr ''(a b) ''(a c)) '(if TCP '(a b) '(a c)))
-(equal? (compare-expr '(quote (a b)) '(quote (a c))) '(if TCP '(a b) '(a c)))
-(equal? (compare-expr '(quote (a b)) '(f (a c))) '(if TCP '(a b) (f (a c))))
+(display "11. ") (display (equal? (compare-expr 'a '(cons a b)) '(if TCP a (cons a b)))) (newline)
+(display "12. ") (display (equal? (compare-expr '(cons a b) '(cons a b)) '(cons a b))) (newline)
+(display "13. ") (display (equal? (compare-expr '(cons a b) '(cons a c)) '(cons a (if TCP b c)))) (newline)
+(display "14. ") (display (equal? (compare-expr '(cons (cons a b) (cons b c)) '(cons (cons a c) (cons a c))) '(cons (cons a (if TCP b c)) (cons (if TCP b a) c)))) (newline)
+(display "15. ") (display (equal? (compare-expr '(cons a b) '(list a b)) '((if TCP cons list) a b))) (newline)
+(display "16. ") (display (equal? (compare-expr '(list) '(list a)) '(if TCP (list) (list a)))) (newline)
+(display "17. ") (display (equal? (compare-expr '(quoth (a b)) '(quoth (a c))) '(quoth (a (if TCP b c))))) (newline)
 
-(equal? (compare-expr '(if x y z) '(if x z z)) '(if x (if TCP y z) z))
-(equal? (compare-expr '(if x y z) '(g x y z)) '(if TCP (if x y z) (g x y z)))
+(display "18. ") (display (equal? (compare-expr ''(a b) ''(a c)) '(if TCP '(a b) '(a c)))) (newline)
+(display "19. ") (display (equal? (compare-expr '(quote (a b)) '(quote (a c))) '(if TCP '(a b) '(a c)))) (newline)
+(display "20. ") (display (equal? (compare-expr '(quote (a b)) '(f (a c))) '(if TCP '(a b) (f (a c))))) (newline)
 
-(equal? (compare-expr '(let ((a 1)) (f a)) '(let ((a 2)) (g a))) '(let ((a (if TCP 1 2))) ((if TCP f g) a)))
-(equal? (compare-expr '(+ #f (let ((a 1) (b 2)) (f a b))) '(+ #t (let ((a 1) (c 2)) (f a c))))
-	'(+ (not TCP) (if TCP (let ((a 1) (b 2)) (f a b)) (let ((a 1) (c 2)) (f a c)))))
+(display "21. ") (display (equal? (compare-expr '(if x y z) '(if x z z)) '(if x (if TCP y z) z))) (newline)
+(display "22. ") (display (equal? (compare-expr '(if x y z) '(g x y z)) '(if TCP (if x y z) (g x y z)))) (newline)
+
+(display "23. ") (display (equal? (compare-expr '(let ((a 1)) (f a)) '(let ((a 2)) (g a))) '(let ((a (if TCP 1 2))) ((if TCP f g) a)))) (newline)
+(display "24. ") (display (equal? (compare-expr '(+ #f (let ((a 1) (b 2)) (f a b))) '(+ #t (let ((a 1) (c 2)) (f a c))))
+	'(+ (not TCP) (if TCP (let ((a 1) (b 2)) (f a b)) (let ((a 1) (c 2)) (f a c)))))) (newline)
 
 
-(equal? (compare-expr '((lambda (a) (f a)) 1) '((lambda (a) (g a)) 2)) '((lambda (a) ((if TCP f g) a)) (if TCP 1 2)))
-(equal? (compare-expr '((lambda (a b) (f a b)) 1 2) '((lambda (a b) (f b a)) 1 2))
-	'((lambda (a b) (f (if TCP a b) (if TCP b a))) 1 2))
-(equal? (compare-expr '((lambda (a b) (f a b)) 1 2) '((lambda (a c) (f c a)) 1 2))
- 	'((if TCP (lambda (a b) (f a b)) (lambda (a c) (f c a))) 1 2))
-
-(equal-bindings '((a 1) (f a)) '((a 2) (g a)))
-(compare-literals '((a 1) (f a)) '((a 2) (g a)))
-
-(compare-lets '(let ((a 1)) (f a)) '(let ((a 2)) (g a)))
-(compare-lets '(let ((a 1) (b 2)) (f a b)) '(let ((a 1) (c 2)) (f a c)))
+(display "25. ") (display (equal? (compare-expr '((lambda (a) (f a)) 1) '((lambda (a) (g a)) 2)) '((lambda (a) ((if TCP f g) a)) (if TCP 1 2)))) (newline)
+(display "26. ") (display (equal? (compare-expr '((lambda (a b) (f a b)) 1 2) '((lambda (a b) (f b a)) 1 2))
+	'((lambda (a b) (f (if TCP a b) (if TCP b a))) 1 2))) (newline)
+(display "27. ") (display (equal? (compare-expr '((lambda (a b) (f a b)) 1 2) '((lambda (a c) (f c a)) 1 2))
+ 	'((if TCP (lambda (a b) (f a b)) (lambda (a c) (f c a))) 1 2))) (newline)
