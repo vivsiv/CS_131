@@ -65,6 +65,7 @@ class HerdServerProtocol(LineReceiver):
 				self.sendLine("Invalid WHATSAT request")
 		else :
 			self.sendLine("?")
+			self.sendLine(line)
 			logging.error(" {0}: Invalid Request: {1}.".format(self.factory.name, line))
 			print("Couldn't Identify Request")
 
