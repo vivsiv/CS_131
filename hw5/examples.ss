@@ -140,3 +140,96 @@
 	)
 )
 (map (lambda (x) (* x x)) '(1 2 3 4))
+
+(+ (* 1.2 (- 2 (/ 1 3))) (- 0 8.7))
+
+(let ([ts (* 3 a)])
+	(+ (- ts b) (+ ts b))
+)
+
+(let ([l (list 'a 'b 'c)])
+	(cons (car l) (cdr l))
+)
+
+	
+(let ([x 'a] [y 'b])
+  (list (let ([c 'c]) (cons c y))
+        (let ([d 'd]) (cons x d))))
+
+(let ([x 5])
+	(lambda (y x) (+ y x))
+	3
+)
+
+(define compose
+	(lambda (p1 p2)
+		(lambda (x)
+			(p1 (p2 x))
+		)
+	)
+)
+
+(define cadr
+	(lambda (l)
+		((compose car cdr) l)
+	)
+)
+
+(define contains
+	(lambda (l e)
+		(cond
+			[(null? l) #f]
+			[(equal? (car l) e) #t]
+			[else (contains (cdr l) e)]
+		)
+	)
+)
+
+(define subset
+	(lambda (s1 s2)
+		(cond
+			[(null? s1) #t]
+			[else 
+				(if (contains s2 (car s1))  
+					(subset (cdr s1) s2)
+					#f
+				)
+			]
+		)
+	)
+)
+
+(define equal-sets
+	(lambda (s1 s2)
+		(and (subset s1 s2) (subset s2 s1))
+	)
+)
+
+(define factorial
+	(lambda (f)
+		(let factor ([num f] [prod 1])
+			(cond
+				[(eq? num 0) prod]
+				[else (factor (- num 1) (* prod num))]
+			)
+		)
+	)
+)
+
+(define product
+	(lambda (ls)
+		(call/cc 
+			(lambda (break)
+				(let prod ([rem ls] [acc 1])
+					(cond
+						[(null? rem) acc]
+						[(eq? (car rem) 0) (break 0)]
+						[else (prod (cdr rem) (* acc (car rem)))]
+					)
+				)
+			)
+		)
+	)
+)
+
+
